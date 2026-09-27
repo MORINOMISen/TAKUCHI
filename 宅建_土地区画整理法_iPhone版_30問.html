@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="宅建 区画整理">
+<meta name="theme-color" content="#f4f7fb">
+<title>宅建 土地区画整理法 iPhone版30問</title>
+<style>
+:root{--bg:#f4f7fb;--card:#fff;--text:#172033;--sub:#687386;--line:#dce3ed;--blue:#2457d6;--ok:#19733d;--ng:#a92323}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic UI","Meiryo",sans-serif}
+body{padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+.app{max-width:640px;margin:0 auto;min-height:100dvh;padding:14px 14px calc(24px + env(safe-area-inset-bottom))}
+.hero{padding:8px 3px 4px}h1{font-size:23px;line-height:1.25;margin:0 0 6px}.sub{font-size:13px;color:var(--sub)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-top:12px;box-shadow:0 3px 12px rgba(20,35,60,.05)}
+label{display:block;font-size:13px;font-weight:700;margin:12px 0 6px}select,input{width:100%;font-size:16px;padding:13px;border:1px solid #bec8d6;border-radius:12px;background:#fff;color:var(--text)}
+.stack{display:grid;gap:10px}button{font:inherit;font-weight:750;border:0;border-radius:14px;min-height:50px;padding:12px 15px}.primary{background:var(--blue);color:#fff}.soft{background:#eaf0fc;color:#214785}.danger{background:#fff0f0;color:#9b2525}
+.meta{display:flex;gap:7px;flex-wrap:wrap}.pill{font-size:12px;background:#eef2f7;padding:5px 8px;border-radius:999px}
+.stats{display:flex;justify-content:space-between;font-size:13px;color:var(--sub);margin-top:10px}
+.progress{height:8px;background:#e7ebf1;border-radius:999px;overflow:hidden;margin-top:10px}#bar{height:100%;width:0;background:var(--blue)}
+#question{font-size:22px;line-height:1.65;font-weight:800;margin:17px 0 132px}
+.answerDock{position:fixed;left:0;right:0;bottom:0;padding:10px 14px calc(10px + env(safe-area-inset-bottom));background:rgba(244,247,251,.93);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:1px solid var(--line);z-index:10}
+.answerInner{max-width:612px;margin:auto;display:grid;grid-template-columns:1fr 1fr;gap:12px}.ans{min-height:68px;font-size:28px;border:2px solid}.yes{background:#effaf3;color:#146b38;border-color:#9ad2ae}.no{background:#fff2f2;color:#922020;border-color:#e5a2a2}
+.result{display:none;margin-top:12px;border-radius:14px;padding:14px;line-height:1.65}.result.ok{display:block;background:#effaf3;border:1px solid #9ad2ae}.result.ng{display:block;background:#fff2f2;border:1px solid #e5a2a2}.result h2{font-size:19px;margin:0 0 8px}
+.actions{display:none;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}.actions.show{display:grid}
+.hidden{display:none!important}.homeHelp{margin-top:12px;padding:12px;background:#f7f9fc;border-radius:12px;font-size:13px;line-height:1.6}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="hero"><h1>宅建 土地区画整理法</h1><div class="sub">iPhone版・30問・誤答反復</div></div>
+
+  <section id="menu" class="card">
+    <label>習得モード</label>
+    <select id="mode"><option value="normal">通常：1回正解で習得</option><option value="strict">徹底：2回連続正解で習得</option></select>
+    <label>問題順</label>
+    <select id="order"><option value="random">ランダム</option><option value="id">問題番号順</option></select>
+    <label>宅建解説チャットURL</label>
+    <input id="chatUrl" placeholder="固定で使うチャットURL">
+    <div class="stack" style="margin-top:14px">
+      <button class="primary" onclick="start(false)">新しく開始</button>
+      <button class="soft" onclick="resume()">続きから再開</button>
+      <button class="soft" onclick="start(true)">過去に間違えた問題だけ</button>
+      <button class="soft" onclick="toggleHelp()">iPhoneでの使い方</button>
+      <button class="danger" onclick="resetAll()">進捗をリセット</button>
+    </div>
+    <div id="help" class="homeHelp hidden">
+      Safariで開いた場合は、共有ボタン →「ホーム画面に追加」でアプリ風に起動できます。<br>
+      ※ローカルHTMLはiPhone側の仕様で保存動作が不安定になる場合があります。
+    </div>
+  </section>
+
+  <section id="quiz" class="card hidden">
+    <div class="meta"><span class="pill" id="qid"></span><span class="pill" id="point"></span><span class="pill" id="round"></span></div>
+    <div class="stats"><span>残り <b id="remaining"></b></span><span>正解 <b id="correct"></b></span><span>不正解 <b id="wrong"></b></span></div>
+    <div class="progress"><div id="bar"></div></div>
+    <div id="question"></div>
+    <div id="result" class="result">
+      <h2 id="resultTitle"></h2>
+      <div><b>正解：</b><span id="correctAnswer"></span></div>
+      <div id="explanation"></div>
+      <div id="memory" style="font-weight:800;margin-top:8px"></div>
+    </div>
+    <div id="actions" class="actions">
+      <button class="soft" onclick="openChat()">詳しい解説</button>
+      <button class="primary" onclick="next()">次へ</button>
+    </div>
+  </section>
+
+  <section id="done" class="card hidden">
+    <h2>土地区画整理法30問・習得完了</h2>
+    <p id="doneText"></p>
+    <button class="primary" style="width:100%" onclick="backMenu()">メニューへ</button>
+  </section>
+</div>
+
+<div id="answerDock" class="answerDock hidden">
+  <div class="answerInner">
+    <button class="ans yes" onclick="answer(true)">○</button>
+    <button class="ans no" onclick="answer(false)">×</button>
+  </div>
+</div>
+
+<script>
+const Q=[{"id": "Q001", "point": "組合員", "question": "土地区画整理組合の組合員には、施行地区内の宅地所有者だけでなく、借地権者も原則として含まれる。", "answer": true, "explanation": "組合施行では、施行地区内の宅地所有者と借地権者が原則として組合員になります。", "memory": "組合員＝所有者＋借地権者。"}, {"id": "Q002", "point": "審議会", "question": "土地区画整理組合が施行する事業には、必ず土地区画整理審議会が置かれる。", "answer": false, "explanation": "土地区画整理審議会は、公的施行者による事業で置かれる制度です。組合施行で必ず置かれるわけではありません。", "memory": "組合施行＝審議会必置ではない。"}, {"id": "Q003", "point": "事業施行中の建築制限", "question": "土地区画整理事業の施行地区内で、事業の障害となるおそれのある建築物の新築等をする場合、原則として都道府県知事等の許可が必要である。", "answer": true, "explanation": "施行中の建築・土地の形質変更等には、原則として都道府県知事等の許可が必要です。組合の許可ではありません。", "memory": "区画整理中の建築＝知事等の許可。"}, {"id": "Q004", "point": "事業施行中の建築制限", "question": "土地区画整理組合が施行者である場合、施行地区内の建築物の新築等の許可は、組合が行う。", "answer": false, "explanation": "許可主体は原則として都道府県知事等です。組合自身ではありません。", "memory": "許可主体＝組合ではなく知事等。"}, {"id": "Q005", "point": "仮換地", "question": "仮換地が指定されると、従前地を使用収益していた者は、原則として従前地に代えて仮換地を使用収益する。", "answer": true, "explanation": "仮換地指定後は、原則として仮換地を従前地と同じ内容で使用収益します。", "memory": "仮換地＝従前地に代えて使用収益。"}, {"id": "Q006", "point": "仮換地", "question": "仮換地の指定を受けた場合でも、換地処分の公告日までは必ず従前地だけを使用収益する。", "answer": false, "explanation": "仮換地が指定された場合、原則として仮換地を使用収益します。", "memory": "仮換地指定後は仮換地を使う。"}, {"id": "Q007", "point": "仮換地の使用開始日", "question": "仮換地の使用収益開始日は、仮換地指定の効力発生日と別の日に定められることがある。", "answer": true, "explanation": "特別の事情がある場合など、使用収益開始日を別に定めることがあります。", "memory": "仮換地＝使用開始日が別日のこともある。"}, {"id": "Q008", "point": "従前地の管理", "question": "仮換地指定により従前地を使用収益できる者がいなくなった場合、その従前地は換地処分公告まで施行者が管理する。", "answer": true, "explanation": "従前地について使用収益者がいなくなった場合、原則として施行者が管理します。", "memory": "使えなくなった従前地＝施行者管理。"}, {"id": "Q009", "point": "換地計画", "question": "換地を定める場合には、位置、地積、土質、水利、利用状況、環境等が照応するよう定めるのが原則である。", "answer": true, "explanation": "これを照応の原則といいます。", "memory": "換地＝照応の原則。"}, {"id": "Q010", "point": "換地計画", "question": "換地は、従前の宅地と必ず同一の位置・同一の地積でなければならない。", "answer": false, "explanation": "同一である必要はありません。位置や地積等を総合して照応するように定めます。", "memory": "換地＝同一位置・同一面積が必須ではない。"}, {"id": "Q011", "point": "保留地", "question": "保留地は、原則として換地処分公告の日の翌日に施行者が取得する。", "answer": true, "explanation": "保留地の取得時期は換地処分公告日の翌日です。", "memory": "保留地＝公告翌日に施行者取得。"}, {"id": "Q012", "point": "清算金", "question": "換地計画で定められた清算金は、原則として換地処分公告の日の翌日に確定する。", "answer": true, "explanation": "清算金の額は、原則として換地処分公告日の翌日に確定します。", "memory": "清算金＝公告翌日に確定。"}, {"id": "Q013", "point": "清算金", "question": "清算金の徴収・交付に関する権利義務は、換地処分後に土地を取得した者へ当然に移転する。", "answer": false, "explanation": "清算金に関する権利義務は、換地処分時点の所有者等との間で確定するのが原則です。", "memory": "清算金＝換地処分時の権利者に着目。"}, {"id": "Q014", "point": "換地処分", "question": "換地処分は、原則として換地計画に係る区域全部について工事が完了した後に行う。", "answer": true, "explanation": "原則は区域全部の工事完了後です。例外的に定款等で別段の定めがある場合があります。", "memory": "換地処分＝原則工事完了後。"}, {"id": "Q015", "point": "換地処分公告", "question": "換地処分をした施行者が市町村である場合、その市町村が自ら換地処分の公告を行う。", "answer": false, "explanation": "施行者が換地処分をした後、都道府県知事へ届け出、知事が公告する仕組みです。", "memory": "換地処分公告＝知事。"}, {"id": "Q016", "point": "登記", "question": "換地処分の公告後、事業によって土地や建物の登記事項に変動が生じた場合、施行者は遅滞なく必要な登記を申請・嘱託する。", "answer": true, "explanation": "換地処分後の登記整理は施行者が行います。", "memory": "換地処分後の登記＝施行者が申請・嘱託。"}, {"id": "Q017", "point": "土地の分割・合併", "question": "施行者は、事業施行上必要がある場合、所有者に代わって土地の分割・合併の手続をすることができる。", "answer": true, "explanation": "事業施行上必要な場合、施行者が所有者に代わって分割・合併の手続を行える場合があります。", "memory": "施行者＝必要なら分合筆手続可。"}, {"id": "Q018", "point": "換地を定めない場合", "question": "従前から道路として使われていた土地について、新たな道路が設けられ旧道路が不要となる場合など、換地を定めないことができる場合がある。", "answer": true, "explanation": "公共施設用地など一定の場合には、換地を定めないことがあります。", "memory": "一定の場合＝換地を定めないこともある。"}, {"id": "Q019", "point": "損失補償", "question": "仮換地の使用収益開始日が別に定められ、そのため従前地を使用できず通常生ずべき損失が発生した場合、補償の対象となることがある。", "answer": true, "explanation": "通常生ずべき損失について補償が認められる場合があります。", "memory": "仮換地の使用不能損失＝補償あり得る。"}, {"id": "Q020", "point": "抵当権と仮換地", "question": "従前地に抵当権が設定されている場合、抵当権者のために必ず別個の仮換地を指定しなければならない。", "answer": false, "explanation": "抵当権者のために別の宅地を指定する必要はありません。抵当権等は法の仕組みに従って扱われます。", "memory": "抵当権者用の別仮換地は不要。"}, {"id": "Q021", "point": "換地処分の効果", "question": "換地処分の公告日の翌日から、換地は従前の宅地とみなされる。", "answer": true, "explanation": "換地処分の公告日の翌日から、換地は従前地とみなされる効果が生じます。", "memory": "換地処分公告の翌日＝換地の効力発生。"}, {"id": "Q022", "point": "公共施設用地", "question": "土地区画整理事業により新設された道路・公園などの公共施設用地は、換地処分公告日の翌日に原則としてその公共施設の管理者に帰属する。", "answer": true, "explanation": "公共施設用地は、原則として換地処分公告日の翌日に管理者に帰属します。", "memory": "公共施設用地＝公告翌日に管理者へ。"}, {"id": "Q023", "point": "従前の公共施設", "question": "土地区画整理事業により不要となった従前の公共施設用地は、換地処分後も必ず従前の管理者が所有し続ける。", "answer": false, "explanation": "不要となった従前の公共施設用地は、法の定めに従い施行者へ帰属する場合があります。", "memory": "不要旧公共施設＝従前管理者に必ず残るわけではない。"}, {"id": "Q024", "point": "仮換地指定の通知", "question": "仮換地を指定するときは、施行者は原則として関係権利者に対し、仮換地の位置・地積や指定の効力発生日などを通知する。", "answer": true, "explanation": "仮換地指定では、対象者へ指定内容を通知します。", "memory": "仮換地指定＝位置・地積・効力発生日を通知。"}, {"id": "Q025", "point": "照応の原則", "question": "照応の原則は、従前地と換地を完全に同一価値にしなければならないという意味である。", "answer": false, "explanation": "照応は位置・地積・土質・利用状況等を総合して判断する考え方で、完全同価値を要求するものではありません。", "memory": "照応＝完全同価値ではなく総合判断。"}, {"id": "Q026", "point": "減歩", "question": "土地区画整理事業では、公共施設用地や保留地を生み出すために、従前地より換地の面積が小さくなることがある。", "answer": true, "explanation": "いわゆる減歩です。区画整理の典型論点です。", "memory": "換地が小さくなることがある＝減歩。"}, {"id": "Q027", "point": "保留地の目的", "question": "保留地は、土地区画整理事業の施行費用に充てるために定められることがある。", "answer": true, "explanation": "保留地は事業費確保のため売却されることがあります。", "memory": "保留地＝事業費確保のために使われることがある。"}, {"id": "Q028", "point": "換地処分と地役権", "question": "換地処分が行われると、従前地についていたすべての権利が例外なく消滅する。", "answer": false, "explanation": "換地処分により権利関係は換地へ移行しますが、すべての権利が一律消滅するわけではありません。", "memory": "換地処分＝権利が全部消えるわけではない。"}, {"id": "Q029", "point": "事業計画と都市計画", "question": "土地区画整理事業について都市計画が定められている場合、その事業計画は都市計画に適合しなければならない。", "answer": true, "explanation": "都市計画決定がある事業では、事業計画はその都市計画に適合する必要があります。", "memory": "事業計画＝都市計画に適合。"}, {"id": "Q030", "point": "換地処分の総合", "question": "土地区画整理法では、『仮換地指定 → 使用収益 → 換地処分 → 公告翌日に換地・保留地・清算金などの効果発生』という流れを押さえることが重要である。", "answer": true, "explanation": "宅建ではこの時系列が非常に重要です。仮換地と換地処分を混同しないことが得点につながります。", "memory": "仮換地→換地処分→公告翌日、の流れを固定。"}];
+const KEY="takken_iphone_kukakuseiri30_v1", CHAT_KEY="takken_explanation_chat_url";
+let st={active:false,mode:"normal",order:"random",round:1,queue:[],retry:[],idx:0,c:0,w:0,answered:false,streak:{},wrongHist:{}};
+const $=id=>document.getElementById(id);
+function save(){localStorage.setItem(KEY,JSON.stringify(st));localStorage.setItem(CHAT_KEY,$("chatUrl").value.trim())}
+function load(){let s=localStorage.getItem(KEY);if(s)try{st=JSON.parse(s)}catch(e){}$("chatUrl").value=localStorage.getItem(CHAT_KEY)||""}
+function shuffle(a){let b=[...a];for(let i=b.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]]}return b}
+function start(wrongOnly){let arr=wrongOnly?Q.filter(q=>st.wrongHist[q.id]):Q;if(!arr.length){alert("誤答履歴がありません。");return}st={...st,active:true,mode:$("mode").value,order:$("order").value,round:1,idx:0,c:0,w:0,answered:false,retry:[],streak:st.streak||{},wrongHist:st.wrongHist||{}};st.queue=arr.map(q=>q.id);if(st.order==="random")st.queue=shuffle(st.queue);save();showQuiz();render()}
+function resume(){load();if(!st.active||!st.queue.length){alert("再開データがありません。");return}showQuiz();render()}
+function showQuiz(){$("menu").classList.add("hidden");$("done").classList.add("hidden");$("quiz").classList.remove("hidden");$("answerDock").classList.remove("hidden")}
+function current(){return Q.find(q=>q.id===st.queue[st.idx])}
+function render(){let q=current();if(!q){finish();return}st.answered=false;$("qid").textContent=q.id;$("point").textContent=q.point;$("round").textContent=`第${st.round}周`;$("remaining").textContent=st.queue.length-st.idx;$("correct").textContent=st.c;$("wrong").textContent=st.w;$("question").textContent=q.question;$("bar").style.width=(st.idx/st.queue.length*100)+"%";$("result").className="result";$("actions").className="actions";$("answerDock").classList.remove("hidden");save();window.scrollTo({top:0,behavior:"smooth"})}
+function answer(a){if(st.answered)return;st.answered=true;let q=current(),ok=a===q.answer;if(ok){st.c++;st.streak[q.id]=(st.streak[q.id]||0)+1}else{st.w++;st.streak[q.id]=0;st.wrongHist[q.id]=true}let mastered=ok&&(st.mode==="normal"||st.streak[q.id]>=2);if(!mastered)st.retry.push(q.id);$("result").className="result "+(ok?"ok":"ng");$("resultTitle").textContent=ok?"正解です":"不正解です";$("correctAnswer").textContent=q.answer?"○":"×";$("explanation").innerHTML="<br><b>解説：</b>"+q.explanation;$("memory").textContent="覚える一言： "+q.memory;$("actions").className="actions show";$("answerDock").classList.add("hidden");save();$("result").scrollIntoView({behavior:"smooth",block:"center"})}
+function next(){st.idx++;if(st.idx>=st.queue.length)finish();else render()}
+function finish(){if(st.retry.length){st.round++;st.queue=st.order==="random"?shuffle([...new Set(st.retry)]):[...new Set(st.retry)].sort();st.retry=[];st.idx=0;render();return}st.active=false;save();$("quiz").classList.add("hidden");$("answerDock").classList.add("hidden");$("done").classList.remove("hidden");$("doneText").textContent=`正解${st.c}回、不正解${st.w}回、第${st.round}周で完了しました。`}
+function backMenu(){$("done").classList.add("hidden");$("quiz").classList.add("hidden");$("answerDock").classList.add("hidden");$("menu").classList.remove("hidden");load()}
+function toggleHelp(){$("help").classList.toggle("hidden")}
+async function openChat(){let q=current(),url=$("chatUrl").value.trim()||localStorage.getItem(CHAT_KEY)||"";if(!url){alert("先にチャットURLを登録してください。");return}let p=`次の宅建一問一答を詳しく解説してください。土地区画整理法の流れ、組合員、仮換地、使用収益、換地計画、照応の原則、換地処分、保留地、清算金、公告翌日の効果を重点的に説明してください。\n\n【問題】${q.question}\n【正解】${q.answer?"○":"×"}\n【教材解説】${q.explanation}\n【覚える一言】${q.memory}`;try{await navigator.clipboard.writeText(p);window.open(url,"_blank")}catch(e){alert("コピーできませんでした。Safariの設定をご確認ください。")}}
+function resetAll(){if(!confirm("進捗をすべて削除しますか？"))return;localStorage.removeItem(KEY);st={active:false,mode:"normal",order:"random",round:1,queue:[],retry:[],idx:0,c:0,w:0,answered:false,streak:{},wrongHist:{}};alert("リセットしました。")}
+load();
+</script>
+</body></html>
